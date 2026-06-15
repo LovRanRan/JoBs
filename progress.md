@@ -137,13 +137,14 @@
 - [x] `prisma validate` + `next build` 通过
 - 注:middleware 的 matcher 本就排除 `/api`,插件接口走 Bearer 不受 cookie 重定向影响,无需改动。
 
-**4B · 浏览器插件(Chrome MV3)**
-- [ ] 插件骨架(manifest v3 + popup + background + content script)
-- [ ] 用 JoBs Token 登录,拉 `/api/extension/queue`
-- [ ] 各 ATS 申请页的 autofill 适配器:Greenhouse / Lever / Ashby(填字段 + 上传简历)
-- [ ] dry-run 模式(只填不交、截图)→ 真提交(用户确认或自动,带每日上限+随机间隔)
-- [ ] 提交后回写 `/api/extension/report`
-- [ ] LinkedIn 默认跳过
+**4B · 浏览器插件(Chrome MV3)✅(完成)**
+- [x] 插件骨架:`extension/`(manifest v3 + popup + background module + content script + api 模块)
+- [x] 用 JoBs Token 登录,拉 `/api/extension/queue`,popup 测试连接
+- [x] autofill 适配器:Greenhouse / Lever / Ashby + 通用回退(姓名/邮箱/电话/地点等);React-friendly 赋值
+- [x] dry-run(只填不交、高亮)→ 真提交(找提交按钮点击),受每日上限 + 随机间隔约束
+- [x] 提交后回写 `/api/extension/report`(成功→看板 applied)
+- [x] LinkedIn 不支持(刻意跳过)
+- ⚠️ **已知限制**:浏览器禁止脚本设置文件输入 → **简历无法自动上传**,需上传简历的表单会停在"填好"状态提示手动。已在 extension/README 写明。
 
 **4C · 部署 & 增强**
 - [ ] 部署到 Vercel + 托管 Postgres(Neon),配 Cron
@@ -175,9 +176,10 @@
 
 ## 6. 当前状态
 
-📍 **Phase 4A 完成**(自动投递网站侧):数据模型 + 插件 Bearer 鉴权 + queue/report 接口 + 配置页 + 历史视图,`next build` 通过,已 push。
-下一步:**Phase 4B —— Chrome MV3 浏览器插件**(用 Token 拉队列、在 GH/Lever/Ashby 申请页 autofill、dry-run/真提交、回写)。
-注意:schema 有改动,本地需跑 `npm run db:push` 同步表结构。
+📍 **Phase 4A + 4B 完成**:自动投递全链路打通——网站侧(配置/队列/Token/历史)+ Chrome 插件(`extension/`,autofill + dry-run/提交 + 回写)。
+已知限制:简历文件无法脚本自动上传(浏览器安全),需手动传。
+下一步候选:**4C 部署上线(Vercel + Neon)**,或提醒/Offer 对比/简历解析,或 UI 集中打磨。
+注意:schema 改过,本地跑网站前需 `npm run db:push`。
 
 ## 7. 待办 / 待确认
 
@@ -193,6 +195,7 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 4B | Chrome MV3 插件完成:extension/(manifest+api+background+content+popup),Token 连接、拉队列、GH/Lever/Ashby autofill + 通用回退、dry-run/提交、回写 report;已知限制:简历需手动上传。push
 - 2026-06-14 | Phase 4A | 自动投递网站侧完成:新增 AutoApplyConfig/ApplicationLog/ApiToken 模型 + Bearer token 鉴权 + /api/extension/{queue,report} + /api/autoapply/{config,logs} + /api/tokens + 配置页 /settings/auto-apply + 导航,`next build` 通过,push
 - 2026-06-14 | Phase 4 规划 | 敲定自动投递架构(网站大脑 + 本地浏览器插件,低频/标准ATS/dry-run/白名单);progress 写入 §2.5 决策、§5.5 改动清单、Phase 4 计划、模块表更新
 - 2026-06-14 | Phase 3 | 接 Claude API:`lib/ai.ts` + `/api/ai/tailor`,岗位详情页真·按 JD 改简历(无 key 回退模板),`next build` 通过,push

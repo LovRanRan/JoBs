@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "JoBs Auto-Apply",
+  "version": "0.1.0",
+  "description": "在你自己的浏览器里,把 JoBs 的待投岗位自动填好(可选自动提交)。Greenhouse / Lever / Ashby。",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.vercel.app/*",
+    "https://boards.greenhouse.io/*",
+    "https://job-boards.greenhouse.io/*",
+    "https://*.greenhouse.io/*",
+    "https://jobs.lever.co/*",
+    "https://jobs.ashbyhq.com/*",
+    "https://*.ashbyhq.com/*"
+  ],
+  "action": {
+    "default_title": "JoBs Auto-Apply",
+    "default_popup": "src/popup.html"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  }
+}

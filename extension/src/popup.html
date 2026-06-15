@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body { font-family: -apple-system, system-ui, sans-serif; width: 320px; margin: 0; padding: 14px; color: #111827; }
+      h1 { font-size: 15px; margin: 0 0 2px; color: #2b56d4; }
+      .sub { font-size: 11px; color: #9ca3af; margin-bottom: 12px; }
+      label { display: block; font-size: 11px; color: #6b7280; margin: 8px 0 3px; }
+      input { width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: 12px; border: 1px solid #e5e7eb; border-radius: 7px; }
+      button { margin-top: 10px; width: 100%; padding: 8px; font-size: 13px; font-weight: 600; border: 0; border-radius: 7px; cursor: pointer; }
+      .primary { background: #2b56d4; color: #fff; }
+      .ghost { background: #fff; color: #2b56d4; border: 1px solid #2b56d4; }
+      .status { margin-top: 6px; font-size: 11px; color: #6b7280; }
+      #log { margin-top: 10px; max-height: 160px; overflow: auto; background: #f6f7f9; border-radius: 7px; padding: 8px; font-size: 11px; white-space: pre-wrap; line-height: 1.5; }
+      .ok { color: #16a34a; }
+      .err { color: #dc2626; }
+    </style>
+  </head>
+  <body>
+    <h1>JoBs Auto-Apply</h1>
+    <div class="sub">在你自己的浏览器里执行 · 提交由你掌控</div>
+
+    <label>JoBs 网址</label>
+    <input id="apiBase" placeholder="http://localhost:3000" />
+    <label>插件 Token(在 JoBs → Auto-Apply 生成)</label>
+    <input id="token" type="password" placeholder="jobs_..." />
+
+    <button id="save" class="ghost">保存 & 测试连接</button>
+    <div id="conn" class="status"></div>
+
+    <button id="run" class="primary">▶ 开始自动投递</button>
+    <div id="log"></div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
