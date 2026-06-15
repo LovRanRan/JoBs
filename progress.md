@@ -88,10 +88,17 @@
 - [x] `next build` 通过(页面随数据动态渲染)
 - 注:`src/lib/mock.ts` 已成废弃文件(页面不再引用),可在本地删除。
 
-### Phase 3 — 抓取 & AI
-- [ ] ATS 职位抓取(每日 cron)
-- [ ] 简历解析引擎
-- [ ] AI 匹配 + JD 改简历 + 求职信
+### Phase 3 — 抓取 & AI ✅(完成)
+- [x] ATS 抓取器(Greenhouse/Lever/Ashby 公开接口,容错归一化)— `lib/ats.ts`
+- [x] JD 关键词提取 + HTML 清洗 + 摘要 — `lib/extract.ts`(已单测:Go 不误命中 Google)
+- [x] 抓取源配置 `lib/sources.ts`(美国科技公司,可增删)
+- [x] 每日 cron `/api/cron/scrape`(CRON_SECRET 校验)+ `vercel.json`
+- [x] 手动「立即同步」`/api/jobs/sync` + Jobs 页按钮
+- [x] Claude API 封装 `lib/ai.ts` + `/api/ai/tailor`,岗位详情页接真实 AI(无 key 回退模板)
+- [x] `next build` 通过(14 个 API 路由)
+- [ ] 简历解析引擎(上传 PDF→结构化)— 留待后续
+
+**说明**:`lib/sources.ts` 里的公司 token 是示例,部分可能已迁移 ATS;抓取器会跳过失败源。生产前按需调整公司清单。
 
 ### Phase 4 — 部署 & 打磨
 - [ ] 部署上线
@@ -99,7 +106,7 @@
 
 ## 6. 当前状态
 
-📍 **Phase 2b 完成**:全栈打通——登录后页面读写真实 Postgres,看板移动/加岗位会持久化。`next build` 通过,已 push。下一步:Phase 3(ATS 每日抓取 + Claude API 改简历)。UI 调整待集中处理。
+📍 **Phase 3 完成**:ATS 每日抓取 + 手动同步 + Claude API 改简历全部接通,`next build` 通过,已 push。核心链路(抓取→匹配→改简历→投递→追踪→统计)已端到端打通。下一步:Phase 4(部署上线 + 提醒/Offer 对比 + 简历解析 + UI 集中打磨)。
 
 ## 7. 待办 / 待确认
 
@@ -112,6 +119,8 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 3 | 接 Claude API:`lib/ai.ts` + `/api/ai/tailor`,岗位详情页真·按 JD 改简历(无 key 回退模板),`next build` 通过,push
+- 2026-06-14 | Phase 3 | ATS 抓取:`lib/ats.ts`(GH/Lever/Ashby 归一化)+ `lib/extract.ts`(关键词/清洗,已单测)+ cron `/api/cron/scrape` + 手动 `/api/jobs/sync` + Jobs 页同步按钮 + vercel.json
 - 2026-06-14 | Phase 2b | 前端全部切真实 API/DB:Dashboard/Profile/Resumes 服务端直读 Prisma,Jobs/详情/看板 fetch API,看板移动 PATCH 持久化、详情加入看板 POST,`next build` 通过,push
 - 2026-06-14 | Phase 2 | 完成后端:Prisma schema(5 模型)+ seed + 认证(JWT cookie/middleware)+ 11 个 API 路由 + 匹配工具 + 注册/登录接 API,`next build` 通过,push
 - 2026-06-14 | Phase 1 | 完成高保真原型:7 页(Dashboard/Jobs/岗位详情含JD改简历/看板/简历/Profile/登录)+ mock 数据,`next build` 通过,push

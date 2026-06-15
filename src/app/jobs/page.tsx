@@ -14,9 +14,12 @@ export default function JobsPage() {
   const [sort, setSort] = useState<Sort>("match");
   const [onlyNew, setOnlyNew] = useState(false);
   const [q, setQ] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
 
-  useEffect(() => {
-    fetch("/api/jobs")
+  const load = () => {
+    setLoading(true);
+    return fetch("/api/jobs")
       .then((r) => r.json())
       .then((d) => {
         const list: JobCardData[] = (d.jobs ?? []).map((j: ApiJob) => ({
@@ -27,7 +30,25 @@ export default function JobsPage() {
         setJobs(list);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, []);
+
+  const sync = async () => {
+    setSyncing(true);
+    setSyncMsg("");
+    const res = await fetch("/api/jobs/sync", { method: "POST" });
+    const d = await res.json().catch(() => ({}));
+    setSyncing(false);
+    if (res.ok) {
+      setSyncMsg(`抓取完成:新增/更新 ${d.upserted ?? 0} 条`);
+      await load();
+    } else {
+      setSyncMsg("抓取失败");
+    }
+  };
 
   const list = useMemo(() => {
     let l = jobs.filter((j) => {
@@ -49,9 +70,16 @@ export default function JobsPage() {
           <h1 className="text-2xl font-bold">Jobs</h1>
           <p className="text-sm text-gray-500 mt-1">基于你的 Profile 个性化推荐 · 每日自动抓取</p>
         </div>
-        <button className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          + 粘贴 JD 手动添加
-        </button>
+        <div className="flex items-center gap-2">
+          {syncMsg && <span className="text-xs text-gray-400">{syncMsg}</span>}
+          <button
+            onClick={sync}
+            disabled={syncing}
+            className="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-60"
+          >
+            {syncing ? "抓取中…" : "↻ 立即同步岗位"}
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">

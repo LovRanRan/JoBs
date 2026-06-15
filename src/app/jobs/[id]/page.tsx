@@ -29,6 +29,8 @@ export default function JobDetail({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [tailored, setTailored] = useState(false);
   const [tailoring, setTailoring] = useState(false);
+  const [tailoredText, setTailoredText] = useState("");
+  const [aiSource, setAiSource] = useState<"claude" | "fallback" | "">("");
   const [inPipeline, setInPipeline] = useState(false);
   const [adding, setAdding] = useState(false);
 
@@ -48,16 +50,20 @@ export default function JobDetail({ params }: { params: { id: string } }) {
       </div>
     );
 
-  const tailoredBullet = `Designed and shipped a full-stack ${
-    job.tags.includes("PostgreSQL") ? "PostgreSQL-backed" : "TypeScript"
-  } platform with ${job.tags.slice(0, 2).join(" & ")}, improving API latency by 40% — directly matching ${job.company}'s focus on ${job.tags[0] ?? "engineering"}.`;
-
-  const generate = () => {
+  const generate = async () => {
     setTailoring(true);
-    setTimeout(() => {
+    const res = await fetch("/api/ai/tailor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId: job.id }),
+    });
+    const d = await res.json().catch(() => ({}));
+    setTailoring(false);
+    if (res.ok) {
+      setTailoredText(d.tailored ?? "");
+      setAiSource(d.source ?? "");
       setTailored(true);
-      setTailoring(false);
-    }, 900);
+    }
   };
 
   const addToPipeline = async () => {
@@ -123,7 +129,9 @@ export default function JobDetail({ params }: { params: { id: string } }) {
           <div className="rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-semibold">按 JD 定制简历</h2>
-              <span className="text-xs text-gray-400">由 Claude 生成(Phase 3 接真实 API)</span>
+              <span className="text-xs text-gray-400">
+                {aiSource === "claude" ? "✦ 由 Claude 生成" : aiSource === "fallback" ? "模板生成(未配置 AI key)" : "AI 驱动"}
+              </span>
             </div>
             <p className="text-xs text-gray-400 mb-4">
               AI 对比 JD 与你的 Master Resume,重写要点、补关键词以通过 ATS。原始简历不变。
@@ -142,7 +150,7 @@ export default function JobDetail({ params }: { params: { id: string } }) {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-brand-600 mb-1">定制后(针对 {job.company})</div>
-                  <div className="rounded-lg border border-brand-100 bg-brand-50 p-3 text-sm text-gray-800">{tailoredBullet}</div>
+                  <div className="rounded-lg border border-brand-100 bg-brand-50 p-3 text-sm text-gray-800 whitespace-pre-line">{tailoredText}</div>
                 </div>
               </div>
             )}
