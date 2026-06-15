@@ -147,7 +147,8 @@
 - ⚠️ **已知限制**:浏览器禁止脚本设置文件输入 → **简历无法自动上传**,需上传简历的表单会停在"填好"状态提示手动。已在 extension/README 写明。
 
 **4C · 部署 & 增强**
-- [ ] 部署到 Vercel + 托管 Postgres(Neon),配 Cron
+- [x] 部署准备:`vercel.json` 加 buildCommand(部署时自动 `prisma db push` 建表)+ `DEPLOY.md` 指南
+- [ ] 实际部署到 Vercel + Neon(需用户账号授权)、配置环境变量、验证上线
 - [ ] 跟进提醒(模块 7)、Offer 对比(模块 9)、简历 PDF 解析(模块 11)
 - [ ] UI 集中打磨(登录/注册页脱离主布局、整体视觉)
 
@@ -195,6 +196,7 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 4C | 部署准备:vercel.json 加 buildCommand(部署时自动建表)+ 写 DEPLOY.md(Neon+Vercel 步骤),push;待用户授权账号实际部署
 - 2026-06-14 | Phase 4B | Chrome MV3 插件完成:extension/(manifest+api+background+content+popup),Token 连接、拉队列、GH/Lever/Ashby autofill + 通用回退、dry-run/提交、回写 report;已知限制:简历需手动上传。push
 - 2026-06-14 | Phase 4A | 自动投递网站侧完成:新增 AutoApplyConfig/ApplicationLog/ApiToken 模型 + Bearer token 鉴权 + /api/extension/{queue,report} + /api/autoapply/{config,logs} + /api/tokens + 配置页 /settings/auto-apply + 导航,`next build` 通过,push
 - 2026-06-14 | Phase 4 规划 | 敲定自动投递架构(网站大脑 + 本地浏览器插件,低频/标准ATS/dry-run/白名单);progress 写入 §2.5 决策、§5.5 改动清单、Phase 4 计划、模块表更新
