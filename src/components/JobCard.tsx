@@ -1,6 +1,20 @@
 import Link from "next/link";
-import { Job } from "@/lib/types";
 import MatchBadge from "./MatchBadge";
+
+export interface JobCardData {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  remote: boolean;
+  salary?: string | null;
+  source: string;
+  postedAt: string;
+  tags: string[];
+  jdSummary: string;
+  matchScore: number;
+  isNew?: boolean;
+}
 
 const sourceLabel: Record<string, string> = {
   greenhouse: "Greenhouse",
@@ -9,7 +23,7 @@ const sourceLabel: Record<string, string> = {
   manual: "Manual",
 };
 
-export default function JobCard({ job }: { job: Job }) {
+export default function JobCard({ job }: { job: JobCardData }) {
   return (
     <Link
       href={`/jobs/${job.id}`}
@@ -20,9 +34,7 @@ export default function JobCard({ job }: { job: Job }) {
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-gray-900">{job.title}</h3>
             {job.isNew && (
-              <span className="rounded bg-green-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                NEW
-              </span>
+              <span className="rounded bg-green-500 px-1.5 py-0.5 text-[10px] font-bold text-white">NEW</span>
             )}
           </div>
           <div className="text-sm text-gray-500">
@@ -33,23 +45,19 @@ export default function JobCard({ job }: { job: Job }) {
         <MatchBadge score={job.matchScore} />
       </div>
 
-      {job.salary && (
-        <div className="mt-2 text-sm font-medium text-gray-700">{job.salary}</div>
-      )}
+      {job.salary && <div className="mt-2 text-sm font-medium text-gray-700">{job.salary}</div>}
 
       <p className="mt-2 text-sm text-gray-600 line-clamp-2">{job.jdSummary}</p>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {job.tags.map((t) => (
-          <span key={t} className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-            {t}
-          </span>
+          <span key={t} className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{t}</span>
         ))}
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
-        <span>via {sourceLabel[job.source]}</span>
-        <span>{job.postedAt}</span>
+        <span>via {sourceLabel[job.source] ?? job.source}</span>
+        <span>{job.postedAt.slice(0, 10)}</span>
       </div>
     </Link>
   );

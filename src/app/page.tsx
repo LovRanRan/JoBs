@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { applications, funnel, jobById, jobs } from "@/lib/mock";
+import { prisma } from "@/lib/db";
+import { requireUser } from "@/lib/session";
+import { computeMatch } from "@/lib/match";
 import { STAGES } from "@/lib/types";
 import MatchBadge from "@/components/MatchBadge";
+
+export const dynamic = "force-dynamic";
 
 function Stat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -13,37 +17,47 @@ function Stat({ label, value, sub }: { label: string; value: string | number; su
   );
 }
 
-export default function Dashboard() {
-  const f = funnel();
-  const newToday = jobs.filter((j) => j.isNew).length;
-  const activeApps = applications.filter((a) => !["new", "closed"].includes(a.stage)).length;
-  const interviews = applications.filter((a) => a.stage === "interview").length;
+export default async function Dashboard() {
+  const user = await requireUser();
+  const skills = user.profile?.skills ?? [];
 
+  const [apps, jobs] = await Promise.all([
+    prisma.application.findMany({ where: { userId: user.id } }),
+    prisma.job.findMany(),
+  ]);
+
+  const inStages = (s: string[]) => apps.filter((a) => s.includes(a.stage)).length;
   const funnelSteps = [
-    { label: "Scraped", value: f.scraped },
-    { label: "Applied", value: f.applied },
-    { label: "OA", value: f.oa },
-    { label: "Interview", value: f.interview },
-    { label: "Offer", value: f.offer },
+    { label: "Scraped", value: jobs.length },
+    { label: "Applied", value: inStages(["applied", "oa", "interview", "offer"]) },
+    { label: "OA", value: inStages(["oa", "interview", "offer"]) },
+    { label: "Interview", value: inStages(["interview", "offer"]) },
+    { label: "Offer", value: inStages(["offer"]) },
   ];
   const max = Math.max(...funnelSteps.map((s) => s.value), 1);
 
-  const topMatches = [...jobs].sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
+  const today = new Date().toISOString().slice(0, 10);
+  const newToday = jobs.filter((j) => j.postedAt.toISOString().slice(0, 10) === today).length;
+  const activeApps = apps.filter((a) => !["new", "closed"].includes(a.stage)).length;
+  const interviews = apps.filter((a) => a.stage === "interview").length;
+
+  const scored = jobs.map((j) => ({ job: j, ...computeMatch(skills, j.tags) }));
+  const avg = scored.length ? Math.round(scored.reduce((s, x) => s + x.score, 0) / scored.length) : 0;
+  const topMatches = [...scored].sort((a, b) => b.score - a.score).slice(0, 3);
 
   return (
     <div>
       <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-sm text-gray-500 mt-1">早上好,David。这是你今天的求职概览。</p>
+      <p className="text-sm text-gray-500 mt-1">你好,{user.name ?? user.email}。这是你的求职概览。</p>
 
       <div className="mt-6 grid grid-cols-4 gap-4">
-        <Stat label="今日新增岗位" value={newToday} sub="来自 Greenhouse / Lever / Ashby" />
+        <Stat label="今日新增岗位" value={newToday} sub="来自 ATS 抓取" />
         <Stat label="进行中的投递" value={activeApps} sub="已投 + 笔试 + 面试" />
         <Stat label="面试中" value={interviews} sub="保持跟进" />
-        <Stat label="平均匹配度" value={`${Math.round(jobs.reduce((s, j) => s + j.matchScore, 0) / jobs.length)}%`} sub="基于你的 Profile" />
+        <Stat label="平均匹配度" value={`${avg}%`} sub="基于你的 Profile" />
       </div>
 
       <div className="mt-8 grid grid-cols-3 gap-6">
-        {/* Funnel */}
         <div className="col-span-2 rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="font-semibold">投递漏斗</h2>
           <p className="text-xs text-gray-400 mb-4">从抓取到 Offer 的各阶段转化</p>
@@ -64,13 +78,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Pipeline summary */}
         <div className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="font-semibold">看板概览</h2>
           <p className="text-xs text-gray-400 mb-4">各阶段数量</p>
           <div className="space-y-2">
             {STAGES.map((st) => {
-              const n = applications.filter((a) => a.stage === st.key).length;
+              const n = apps.filter((a) => a.stage === st.key).length;
               return (
                 <div key={st.key} className="flex justify-between text-sm">
                   <span className="text-gray-600">{st.label}</span>
@@ -85,26 +98,28 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top matches */}
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">为你推荐(匹配度最高)</h2>
           <Link href="/jobs" className="text-sm text-brand-600 hover:underline">查看全部 →</Link>
         </div>
         <div className="mt-3 space-y-2">
-          {topMatches.map((j) => (
+          {topMatches.map(({ job, score }) => (
             <Link
-              key={j.id}
-              href={`/jobs/${j.id}`}
+              key={job.id}
+              href={`/jobs/${job.id}`}
               className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:border-brand-500"
             >
               <div>
-                <div className="font-medium text-sm">{j.title} · {j.company}</div>
-                <div className="text-xs text-gray-500">{j.location} · {j.salary}</div>
+                <div className="font-medium text-sm">{job.title} · {job.company}</div>
+                <div className="text-xs text-gray-500">{job.location} · {job.salary}</div>
               </div>
-              <MatchBadge score={j.matchScore} />
+              <MatchBadge score={score} />
             </Link>
           ))}
+          {!topMatches.length && (
+            <p className="text-sm text-gray-400">还没有岗位。去 Jobs 页粘贴 JD 或等待每日抓取。</p>
+          )}
         </div>
       </div>
     </div>

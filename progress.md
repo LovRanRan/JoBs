@@ -80,7 +80,13 @@
 - [x] `.env.example`,登录/注册页接通 API
 - [x] `prisma validate` + `next build` 通过
 
-**Phase 2b(待做)**:把前端页面从 mock 切到真实 API(目前页面仍用 mock 数据展示)。
+**Phase 2b ✅(完成)**:前端全部切到真实数据。
+- [x] `requireUser` session 助手
+- [x] Dashboard / Profile / Resumes 改服务端组件直读 Prisma
+- [x] Jobs / 岗位详情 / 看板 改 fetch `/api/*`
+- [x] 看板移动 → PATCH 持久化;岗位详情「加入看板」→ POST
+- [x] `next build` 通过(页面随数据动态渲染)
+- 注:`src/lib/mock.ts` 已成废弃文件(页面不再引用),可在本地删除。
 
 ### Phase 3 — 抓取 & AI
 - [ ] ATS 职位抓取(每日 cron)
@@ -93,7 +99,7 @@
 
 ## 6. 当前状态
 
-📍 **Phase 2 完成**:Prisma + Postgres schema、认证、CRUD API 全部搭好,`next build` 通过,已 push。下一步:Phase 2b(页面切真实 API)或 Phase 3(ATS 抓取 + Claude AI)。UI 调整待集中处理。
+📍 **Phase 2b 完成**:全栈打通——登录后页面读写真实 Postgres,看板移动/加岗位会持久化。`next build` 通过,已 push。下一步:Phase 3(ATS 每日抓取 + Claude API 改简历)。UI 调整待集中处理。
 
 ## 7. 待办 / 待确认
 
@@ -106,6 +112,7 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 2b | 前端全部切真实 API/DB:Dashboard/Profile/Resumes 服务端直读 Prisma,Jobs/详情/看板 fetch API,看板移动 PATCH 持久化、详情加入看板 POST,`next build` 通过,push
 - 2026-06-14 | Phase 2 | 完成后端:Prisma schema(5 模型)+ seed + 认证(JWT cookie/middleware)+ 11 个 API 路由 + 匹配工具 + 注册/登录接 API,`next build` 通过,push
 - 2026-06-14 | Phase 1 | 完成高保真原型:7 页(Dashboard/Jobs/岗位详情含JD改简历/看板/简历/Profile/登录)+ mock 数据,`next build` 通过,push
 - 2026-06-14 | Phase 1 | 搭好 Next.js 14 + TS + Tailwind 骨架(配置/布局/侧边导航/类型/mock 数据)
