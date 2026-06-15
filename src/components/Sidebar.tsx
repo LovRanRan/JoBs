@@ -8,6 +8,7 @@ const nav = [
   { href: "/jobs", label: "Jobs", icon: "🎯" },
   { href: "/applications", label: "Tracker", icon: "🗂️" },
   { href: "/resumes", label: "Resumes", icon: "📄" },
+  { href: "/settings/auto-apply", label: "Auto-Apply", icon: "🤖" },
   { href: "/profile", label: "Profile", icon: "👤" },
 ];
 

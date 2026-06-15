@@ -127,15 +127,15 @@
 
 ### Phase 4 — 自动投递(网站侧 + 浏览器插件)+ 部署 & 打磨
 
-**4A · 网站侧(云端,先做)**
-- [ ] 数据库新增模型:`AutoApplyConfig`(开关/每日上限/白名单/dry-run/随机间隔)、`ApplicationLog`(每次投递的结果:成功/失败/截图URL/时间/平台)
-- [ ] 给插件用的鉴权:个人 API Token(`ApiToken` 模型 或复用 JWT),供插件登录
-- [ ] 插件 API:
-  - `GET /api/extension/queue` — 返回该用户待投岗位 + 对应定制简历 + 字段映射
-  - `POST /api/extension/report` — 插件回写投递结果
-  - `GET/PUT /api/autoapply/config` — 读/写自动投递配置
-- [ ] 自动投递配置页 `/settings/auto-apply`(开关、每日上限、平台白名单、dry-run 开关)
-- [ ] "今天投了哪些"视图(读 `ApplicationLog`)
+**4A · 网站侧(云端)✅(完成)**
+- [x] 数据库新增模型:`AutoApplyConfig`、`ApplicationLog`、`ApiToken`(+ User 关系)
+- [x] 插件鉴权:`ApiToken`(存 sha256 hash,原文仅创建时返回一次)+ `lib/auth.ts` 的 `getUserIdFromBearer`/`generateApiToken`
+- [x] 插件 API:`GET /api/extension/queue`(待投队列+资料,Bearer)、`POST /api/extension/report`(回写结果,提交成功→看板 applied)
+- [x] 配置 API:`GET/PUT /api/autoapply/config`、`GET /api/autoapply/logs`、token 管理 `/api/tokens` `+/[id]`
+- [x] 配置页 `/settings/auto-apply`:开关、dry-run、**每日上限手动(留空=不限)**、间隔、平台白名单(LinkedIn 灰显跳过)、生成/撤销 Token、"投了哪些"历史
+- [x] 侧边导航加 Auto-Apply 入口
+- [x] `prisma validate` + `next build` 通过
+- 注:middleware 的 matcher 本就排除 `/api`,插件接口走 Bearer 不受 cookie 重定向影响,无需改动。
 
 **4B · 浏览器插件(Chrome MV3)**
 - [ ] 插件骨架(manifest v3 + popup + background + content script)
@@ -171,28 +171,29 @@
 - 独立子目录 `extension/`(Chrome MV3 插件源码,与 Next 应用同仓库)
 
 **风控保险(务必内置)**
-- dry-run 默认开;每日上限默认 15;随机间隔;平台白名单默认仅 GH/Lever/Ashby;LinkedIn 跳过
+- dry-run 默认开;**每日上限由用户手动设置(默认不限,UI 提示低频更安全)**;随机间隔;平台白名单默认仅 GH/Lever/Ashby;LinkedIn 跳过
 
 ## 6. 当前状态
 
-📍 **Phase 3 完成,准备进 Phase 4**。核心链路(抓取→匹配→改简历→投递→追踪→统计)已端到端打通并 push。
-已敲定**自动投递架构**:云端网站(大脑)+ 本地浏览器插件(动手),低频 + 标准 ATS,带 dry-run/上限/白名单。
-下一步按 §5.5 清单先做 **Phase 4A(网站侧:数据模型 + 插件 API + 配置页)**,再做 **4B(Chrome 插件)**。本轮仅更新 progress,经确认后开始编码。
+📍 **Phase 4A 完成**(自动投递网站侧):数据模型 + 插件 Bearer 鉴权 + queue/report 接口 + 配置页 + 历史视图,`next build` 通过,已 push。
+下一步:**Phase 4B —— Chrome MV3 浏览器插件**(用 Token 拉队列、在 GH/Lever/Ashby 申请页 autofill、dry-run/真提交、回写)。
+注意:schema 有改动,本地需跑 `npm run db:push` 同步表结构。
 
 ## 7. 待办 / 待确认
 
 已确认:Next.js + Postgres + Claude API + 美国岗位 + 多用户 + 自动投递走"网站+插件"。
 
-进入 Phase 4 前待确认:
-- [ ] 先做 4A 网站侧(数据模型 + 插件 API + 配置页),OK?
+进入 Phase 4 已确认:
+- [x] 先做 4A 网站侧(数据模型 + 插件 API + 配置页)
+- [x] dry-run 默认开
+- [x] **每日上限不设默认值,由用户在配置页手动设置**(可留空=不限;UI 提示低频更安全)
 - [ ] 插件先支持哪几家 ATS 的 autofill(默认 Greenhouse/Lever/Ashby)
-- [ ] 每日上限默认值(暂定 15)
-- [ ] dry-run 是否默认开(建议:是)
 
 ## 8. 进度日志 (Logs)
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 4A | 自动投递网站侧完成:新增 AutoApplyConfig/ApplicationLog/ApiToken 模型 + Bearer token 鉴权 + /api/extension/{queue,report} + /api/autoapply/{config,logs} + /api/tokens + 配置页 /settings/auto-apply + 导航,`next build` 通过,push
 - 2026-06-14 | Phase 4 规划 | 敲定自动投递架构(网站大脑 + 本地浏览器插件,低频/标准ATS/dry-run/白名单);progress 写入 §2.5 决策、§5.5 改动清单、Phase 4 计划、模块表更新
 - 2026-06-14 | Phase 3 | 接 Claude API:`lib/ai.ts` + `/api/ai/tailor`,岗位详情页真·按 JD 改简历(无 key 回退模板),`next build` 通过,push
 - 2026-06-14 | Phase 3 | ATS 抓取:`lib/ats.ts`(GH/Lever/Ashby 归一化)+ `lib/extract.ts`(关键词/清洗,已单测)+ cron `/api/cron/scrape` + 手动 `/api/jobs/sync` + Jobs 页同步按钮 + vercel.json

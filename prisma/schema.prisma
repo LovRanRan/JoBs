@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
+  id           String           @id @default(cuid())
+  email        String           @unique
   passwordHash String
   name         String?
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime         @default(now())
   profile      Profile?
   applications Application[]
   resumes      Resume[]
+  autoApply    AutoApplyConfig?
+  apiTokens    ApiToken[]
+  logs         ApplicationLog[]
 }
 
 model Profile {
@@ -82,4 +85,45 @@ model Resume {
   keywords    String[]
   content     String?
   updatedAt   DateTime @default(now()) @updatedAt
+}
+
+// ---- 自动投递相关 ----
+
+model AutoApplyConfig {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled        Boolean  @default(false)
+  dailyLimit     Int?     // null = 不限(由用户手动设置)
+  platforms      String[] @default(["greenhouse", "lever", "ashby"])
+  dryRun         Boolean  @default(true)
+  minIntervalSec Int      @default(45)
+  updatedAt      DateTime @default(now()) @updatedAt
+}
+
+// 插件每次投递的结果回写
+model ApplicationLog {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId         String?
+  company       String
+  title         String
+  platform      String
+  status        String   // filled | submitted | failed | skipped
+  message       String?
+  screenshotUrl String?
+  createdAt     DateTime @default(now())
+}
+
+// 浏览器插件鉴权用(存 hash,原文仅创建时返回一次)
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  prefix     String
+  label      String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
 }
