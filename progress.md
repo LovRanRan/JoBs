@@ -3,7 +3,7 @@
 > 一个多用户的求职作战系统:每天抓岗位 → 按 Profile 个性化推荐 → 按 JD 改简历 → 一键投递助手 → 追踪 → 统计。
 > 方向:技术/研发岗。形态:可部署的多页网站。
 
-最后更新:2026-06-14
+最后更新:2026-06-14(已含自动投递架构决策)
 
 **仓库**:https://github.com/LovRanRan/JoBs (public) · 主分支 `main`
 **Git 工作流**:每完成一个 commit 自动 push 到 GitHub。
@@ -19,10 +19,31 @@
 
 ## 2. 关键决策记录
 
-- **自动投递**:不做"全自动偷偷点提交"(违反平台协议 + 封号 + 法律风险)。改为**一键投递助手**:系统匹配岗位、生成定制简历/求职信、填好内容,用户确认后自己点提交。
 - **抓岗位走合规渠道**:优先 ATS 公开职位 API(Greenhouse / Lever / Ashby —— 技术岗超多)、RSS、邮件订阅、手动粘贴 JD 解析。不爬有反爬机制的平台。
-- **多用户**:需要账号系统 + 数据隔离。
-- **AI 能力**:简历解析、匹配度分析、JD 改简历、求职信生成,统一走 AI 服务层(大模型 API)。
+- **多用户**:带注册/登录的 SaaS,人人可用,数据隔离。
+- **AI 能力**:简历解析、匹配度分析、JD 改简历、求职信生成,统一走 AI 服务层(Claude API)。
+- **自动投递(已升级决策)**:用户明确要"每天自动帮我投十几二十个,然后等邮件"。最终方案 = **云端网站(大脑/仪表盘)+ 本地浏览器插件(动手执行)**。详见 §2.5。
+
+## 2.5 自动投递架构决策(重要)
+
+**需求**:注册即用的多用户产品;每天自动投递 10–20 个;用户只看"投了哪些"、等面试邮件。
+
+**核心约束**:部署在云端的网站后端**碰不到用户本地的浏览器会话**。能"操作页面"的代理能力只存在于客户端(插件 / 桌面)。因此"提交申请"这一步必须在用户自己的客户端执行。
+
+**最终架构**:
+- **JoBs 网站(云端,带 auth)= 大脑**:注册登录、抓岗位、个性化推荐、改简历、配置自动投递(开关 / 每日上限 / 平台白名单 / dry-run)、展示"已投了哪些 + 结果"。
+- **浏览器插件(每个用户装一次)= 手**:用同一 JoBs 账号登录 → 拉取该用户"待投队列 + 对应定制简历" → 在用户**自己的浏览器/会话**里 autofill + 提交 → 回写结果到网站。
+- 这就是 Simplify / JobCopilot 类产品的标准形态。
+
+**为什么不做纯云端代投**:服务器无头浏览器替所有用户投 = 同一数据中心 IP 大规模自动化,秒被检测/封 IP,且平台自身承担大规模自动化的协议/法律风险。"动手"必须留在用户客户端。
+
+**封号风险评估(低频 + 标准 ATS)**:
+- Greenhouse / Lever / Ashby 申请页**通常无需登录账号**,只是公开表单提交 → **没有账号可封**,最坏是单次提交失败,重填即可。这是主战场,最安全。
+- **LinkedIn**:自动化是封号重灾区 → 插件默认**跳过,留手动**。
+- **Indeed**:中等风险,默认不自动。
+- 风险来自"数量 + 速度"(非人类行为),不来自"用了自动化"本身。20 个/天 + 随机间隔 + 白天投 ≈ 真人,风控基本不触发。
+- 保险措施:**dry-run**(头几天只填不交、截图确认)+ **每日上限** + **随机间隔** + **平台白名单**。
+- 残余风险不为零,用户知情。
 
 ## 3. 技术选型(已定稿 ✅)
 
@@ -39,16 +60,20 @@
 
 | # | 模块 | 说明 | 状态 |
 |---|------|------|------|
-| 0 | 用户系统 | 注册/登录、Profile、数据隔离 | ⬜ 未开始 |
-| 1 | 简历中心 | 多版本简历、上传、解析成结构化画像、导出 | ⬜ |
-| 2 | 岗位抓取 | 每日定时拉新岗位(ATS API/订阅)+ 手动粘贴 JD 解析 + 去重 | ⬜ |
-| 3 | 匹配引擎 | Profile vs JD 算匹配度、缺口分析、个性化排序推荐 | ⬜ |
-| 4 | JD 改简历 | 对比 JD 重写简历、补关键词过 ATS、存岗位专属版本 | ⬜ |
-| 5 | 一键投递助手 | 生成定制简历+求职信、填好内容、用户确认提交、回写状态 | ⬜ |
-| 6 | 投递追踪看板 | Kanban:新岗位→待投→已投→笔试→面试→Offer→关闭 | ⬜ |
-| 7 | 跟进提醒 | 投递无回音催办、面试后感谢、offer 答复期限 | ⬜ |
-| 8 | 数据统计看板 | 漏斗转化率、每日新增、趋势、按渠道/公司拆分 | ⬜ |
-| 9 | Offer 对比 | 多 offer 按薪资/成长/地点打分对比 | ⬜ |
+| 0 | 用户系统 | 注册/登录、Profile、数据隔离 | ✅ 完成 |
+| 1 | 简历中心 | 多版本简历、版本管理(上传解析、导出 PDF 待做) | 🟡 部分 |
+| 2 | 岗位抓取 | 每日定时拉新岗位(ATS API)+ 手动同步 + 去重 | ✅ 完成 |
+| 3 | 匹配引擎 | Profile vs JD 算匹配度、缺口分析、个性化排序推荐 | ✅ 完成 |
+| 4 | JD 改简历 | Claude 对比 JD 重写简历、补关键词过 ATS | ✅ 完成 |
+| 5 | 投递助手 | 生成定制简历、加入看板、跳转申请页(目前仍需手动提交) | 🟡 部分 |
+| 6 | 投递追踪看板 | Kanban:新岗位→待投→已投→笔试→面试→Offer→关闭 | ✅ 完成 |
+| 7 | 跟进提醒 | 投递无回音催办、面试后感谢、offer 答复期限 | ⬜ 未开始 |
+| 8 | 数据统计看板 | 漏斗转化率、每日新增、趋势 | ✅ 完成(基础) |
+| 9 | Offer 对比 | 多 offer 按薪资/成长/地点打分对比 | ⬜ 未开始 |
+| 10 | **自动投递(网站侧 + 插件)** | 配置页 + 待投队列 API + 浏览器插件 autofill/提交/回写 | ⬜ 未开始(Phase 4 重点) |
+| 11 | 简历 PDF 解析 | 上传 PDF/Word → 结构化画像 | ⬜ 未开始 |
+
+> 状态:✅ 完成 · 🟡 部分完成 · ⬜ 未开始
 
 ## 5. 分阶段计划
 
@@ -100,25 +125,75 @@
 
 **说明**:`lib/sources.ts` 里的公司 token 是示例,部分可能已迁移 ATS;抓取器会跳过失败源。生产前按需调整公司清单。
 
-### Phase 4 — 部署 & 打磨
-- [ ] 部署上线
-- [ ] 提醒、Offer 对比等增强模块
+### Phase 4 — 自动投递(网站侧 + 浏览器插件)+ 部署 & 打磨
+
+**4A · 网站侧(云端,先做)**
+- [ ] 数据库新增模型:`AutoApplyConfig`(开关/每日上限/白名单/dry-run/随机间隔)、`ApplicationLog`(每次投递的结果:成功/失败/截图URL/时间/平台)
+- [ ] 给插件用的鉴权:个人 API Token(`ApiToken` 模型 或复用 JWT),供插件登录
+- [ ] 插件 API:
+  - `GET /api/extension/queue` — 返回该用户待投岗位 + 对应定制简历 + 字段映射
+  - `POST /api/extension/report` — 插件回写投递结果
+  - `GET/PUT /api/autoapply/config` — 读/写自动投递配置
+- [ ] 自动投递配置页 `/settings/auto-apply`(开关、每日上限、平台白名单、dry-run 开关)
+- [ ] "今天投了哪些"视图(读 `ApplicationLog`)
+
+**4B · 浏览器插件(Chrome MV3)**
+- [ ] 插件骨架(manifest v3 + popup + background + content script)
+- [ ] 用 JoBs Token 登录,拉 `/api/extension/queue`
+- [ ] 各 ATS 申请页的 autofill 适配器:Greenhouse / Lever / Ashby(填字段 + 上传简历)
+- [ ] dry-run 模式(只填不交、截图)→ 真提交(用户确认或自动,带每日上限+随机间隔)
+- [ ] 提交后回写 `/api/extension/report`
+- [ ] LinkedIn 默认跳过
+
+**4C · 部署 & 增强**
+- [ ] 部署到 Vercel + 托管 Postgres(Neon),配 Cron
+- [ ] 跟进提醒(模块 7)、Offer 对比(模块 9)、简历 PDF 解析(模块 11)
+- [ ] UI 集中打磨(登录/注册页脱离主布局、整体视觉)
+
+## 5.5 需要修改 / 新增的部分(进入 Phase 4 前的清单)
+
+**数据库(prisma/schema.prisma)**
+- 新增 `AutoApplyConfig`(userId 唯一、enabled、dailyLimit、platforms[]、dryRun、minIntervalSec)
+- 新增 `ApplicationLog`(userId、jobId、platform、status、message、screenshotUrl、createdAt)
+- 新增 `ApiToken`(userId、token、label、createdAt、lastUsedAt)给插件鉴权用
+- 可能给 `Application` 加 `autoApplied: Boolean`、`appliedVia: String`
+
+**现有代码需调整**
+- `middleware.ts`:放行 `/api/extension/*`(走 Token 鉴权,不走 cookie 重定向)
+- `lib/auth.ts`:加 Token 校验函数(`getUserIdFromToken`)
+- 投递助手 UI(岗位详情页):措辞从"打开投递页"升级为与自动投递联动(队列/状态)
+- `Resume.content` 要真正存简历正文(供插件上传 + AI 改写),目前多为空
+
+**新增代码**
+- `src/app/api/extension/queue/route.ts`、`report/route.ts`
+- `src/app/api/autoapply/config/route.ts`
+- `src/app/settings/auto-apply/page.tsx`
+- 独立子目录 `extension/`(Chrome MV3 插件源码,与 Next 应用同仓库)
+
+**风控保险(务必内置)**
+- dry-run 默认开;每日上限默认 15;随机间隔;平台白名单默认仅 GH/Lever/Ashby;LinkedIn 跳过
 
 ## 6. 当前状态
 
-📍 **Phase 3 完成**:ATS 每日抓取 + 手动同步 + Claude API 改简历全部接通,`next build` 通过,已 push。核心链路(抓取→匹配→改简历→投递→追踪→统计)已端到端打通。下一步:Phase 4(部署上线 + 提醒/Offer 对比 + 简历解析 + UI 集中打磨)。
+📍 **Phase 3 完成,准备进 Phase 4**。核心链路(抓取→匹配→改简历→投递→追踪→统计)已端到端打通并 push。
+已敲定**自动投递架构**:云端网站(大脑)+ 本地浏览器插件(动手),低频 + 标准 ATS,带 dry-run/上限/白名单。
+下一步按 §5.5 清单先做 **Phase 4A(网站侧:数据模型 + 插件 API + 配置页)**,再做 **4B(Chrome 插件)**。本轮仅更新 progress,经确认后开始编码。
 
 ## 7. 待办 / 待确认
 
-- [ ] 技术选型最终拍板(是否 Next.js + Postgres)
-- [ ] Phase 1 原型从哪个模块先做
-- [ ] AI 用哪家大模型 API
-- [ ] 目标主要投国内还是海外岗位(影响抓取数据源)
+已确认:Next.js + Postgres + Claude API + 美国岗位 + 多用户 + 自动投递走"网站+插件"。
+
+进入 Phase 4 前待确认:
+- [ ] 先做 4A 网站侧(数据模型 + 插件 API + 配置页),OK?
+- [ ] 插件先支持哪几家 ATS 的 autofill(默认 Greenhouse/Lever/Ashby)
+- [ ] 每日上限默认值(暂定 15)
+- [ ] dry-run 是否默认开(建议:是)
 
 ## 8. 进度日志 (Logs)
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 4 规划 | 敲定自动投递架构(网站大脑 + 本地浏览器插件,低频/标准ATS/dry-run/白名单);progress 写入 §2.5 决策、§5.5 改动清单、Phase 4 计划、模块表更新
 - 2026-06-14 | Phase 3 | 接 Claude API:`lib/ai.ts` + `/api/ai/tailor`,岗位详情页真·按 JD 改简历(无 key 回退模板),`next build` 通过,push
 - 2026-06-14 | Phase 3 | ATS 抓取:`lib/ats.ts`(GH/Lever/Ashby 归一化)+ `lib/extract.ts`(关键词/清洗,已单测)+ cron `/api/cron/scrape` + 手动 `/api/jobs/sync` + Jobs 页同步按钮 + vercel.json
 - 2026-06-14 | Phase 2b | 前端全部切真实 API/DB:Dashboard/Profile/Resumes 服务端直读 Prisma,Jobs/详情/看板 fetch API,看板移动 PATCH 持久化、详情加入看板 POST,`next build` 通过,push
