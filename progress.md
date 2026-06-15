@@ -24,14 +24,16 @@
 - **多用户**:需要账号系统 + 数据隔离。
 - **AI 能力**:简历解析、匹配度分析、JD 改简历、求职信生成,统一走 AI 服务层(大模型 API)。
 
-## 3. 技术选型(待最终确认)
+## 3. 技术选型(已定稿 ✅)
 
-- 前端:Next.js (React) + TailwindCSS,多页
-- 后端:Next.js API Routes / Node 服务
-- 数据库:Postgres(或先用 SQLite 起步)
-- 定时任务:每日抓取 job(cron)
-- AI:大模型 API(简历解析/改写/匹配)
-- 部署:Vercel(前端) + 托管数据库
+- 前端:Next.js 14 (App Router, React, TypeScript) + TailwindCSS,多页
+- 后端:Next.js API Routes
+- 数据库:Postgres(Phase 2 接入,原型阶段用 mock 数据)
+- 定时任务:每日抓取 job(cron / Vercel Cron)
+- AI:**Anthropic Claude API**(简历解析 / JD 改简历 / 匹配度 / 求职信)
+- 部署:Vercel(前端+API) + 托管 Postgres(如 Neon/Supabase)
+- **目标市场:美国技术岗**
+- **岗位数据源**:ATS 公开职位接口 —— Greenhouse(`boards-api.greenhouse.io`)、Lever(`api.lever.co/v0/postings`)、Ashby。这些是公开 JSON 接口,合规、无需爬虫,美国科技公司覆盖广。
 
 ## 4. 模块清单
 
@@ -57,16 +59,17 @@
 - [ ] 初始化 git repo
 - [ ] 最终确认技术选型
 
-### Phase 1 — 高保真交互原型(下一步)
+### Phase 1 — 高保真交互原型 ✅(完成)
 纯前端 + 假数据,跑通完整界面和流程,先确认体验:
-- [ ] 登录 / 注册页
-- [ ] Profile 页
-- [ ] 简历中心(列表 + 上传 + 详情)
-- [ ] 个性化岗位流(推荐 + 匹配度)
-- [ ] JD 改简历对比页
-- [ ] 一键投递助手
-- [ ] 追踪看板
-- [ ] 统计看板
+- [x] 登录 / 注册页
+- [x] Profile 页
+- [x] 简历中心(列表 + 版本)
+- [x] 个性化岗位流(推荐 + 匹配度 + 筛选/排序)
+- [x] JD 改简历对比页(岗位详情内)
+- [x] 一键投递助手(岗位详情内)
+- [x] 追踪看板(Kanban,可移动卡片)
+- [x] 统计看板(Dashboard 漏斗)
+- [x] `npx next build` 验证通过(9 路由全编译)
 
 ### Phase 2 — 后端 & 数据
 - [ ] 数据库 schema 设计
@@ -84,7 +87,7 @@
 
 ## 6. 当前状态
 
-📍 **正在 Phase 0**:已完成构思与核心决策,正在建 repo,下一步做 Phase 1 原型。
+📍 **Phase 1 完成**:多页 Next.js 原型搭好并构建通过,已 push。下一步进 Phase 2(数据库 + 认证 + API),或先按反馈调整原型 UI/流程。
 
 ## 7. 待办 / 待确认
 
@@ -97,6 +100,9 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 1 | 完成高保真原型:7 页(Dashboard/Jobs/岗位详情含JD改简历/看板/简历/Profile/登录)+ mock 数据,`next build` 通过,push
+- 2026-06-14 | Phase 1 | 搭好 Next.js 14 + TS + Tailwind 骨架(配置/布局/侧边导航/类型/mock 数据)
+- 2026-06-14 | Phase 1 | 技术决策定稿:Next.js + Postgres + Claude API + 美国岗位 + ATS(Greenhouse/Lever/Ashby)数据源
 - 2026-06-14 | Phase 0 | 建 GitHub public 仓库 LovRanRan/JoBs,推送代码,默认分支设为 main,确立"每 commit 自动 push"工作流
 - 2026-06-14 | Phase 0 | 在 progress.md 增加「进度日志」板块,确立每步记录规则
 - 2026-06-14 | Phase 0 | 初始化 git repo + .gitignore,首次提交 (8ce3a9c)
