@@ -16,9 +16,22 @@
 
 ```bash
 npm install
-npm run dev
-# 打开 http://localhost:3000
+
+# 1) 配置环境变量
+cp .env.example .env        # 填入 DATABASE_URL(Postgres)和 AUTH_SECRET
+#    生成密钥:openssl rand -base64 32
+
+# 2) 建表 + 灌入示例数据
+npm run db:push
+npm run db:seed             # 创建 demo 用户
+
+# 3) 启动
+npm run dev                 # http://localhost:3000
 ```
+
+**Demo 账号**:`13812764054zhc@gmail.com` / `password123`
+
+没有 Postgres?最快的方式是用 [Neon](https://neon.tech) 免费实例,把连接串填进 `DATABASE_URL`。
 
 ## 页面
 

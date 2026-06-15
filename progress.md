@@ -71,10 +71,16 @@
 - [x] 统计看板(Dashboard 漏斗)
 - [x] `npx next build` 验证通过(9 路由全编译)
 
-### Phase 2 — 后端 & 数据
-- [ ] 数据库 schema 设计
-- [ ] 用户认证
-- [ ] 岗位 / 投递 / 简历 数据 CRUD API
+### Phase 2 — 后端 & 数据 ✅(完成)
+- [x] 数据库 schema 设计(Prisma:User/Profile/Job/Application/Resume)
+- [x] DB 客户端单例 + seed 脚本(含 demo 用户)
+- [x] 用户认证(bcrypt + jose JWT cookie,register/login/logout/me,middleware 保护)
+- [x] CRUD API:jobs(列表含个性化匹配 + 手动加)、applications(看板 + 移动阶段)、resumes、profile
+- [x] 匹配工具 `lib/match.ts`(Profile × JD)
+- [x] `.env.example`,登录/注册页接通 API
+- [x] `prisma validate` + `next build` 通过
+
+**Phase 2b(待做)**:把前端页面从 mock 切到真实 API(目前页面仍用 mock 数据展示)。
 
 ### Phase 3 — 抓取 & AI
 - [ ] ATS 职位抓取(每日 cron)
@@ -87,7 +93,7 @@
 
 ## 6. 当前状态
 
-📍 **Phase 1 完成**:多页 Next.js 原型搭好并构建通过,已 push。下一步进 Phase 2(数据库 + 认证 + API),或先按反馈调整原型 UI/流程。
+📍 **Phase 2 完成**:Prisma + Postgres schema、认证、CRUD API 全部搭好,`next build` 通过,已 push。下一步:Phase 2b(页面切真实 API)或 Phase 3(ATS 抓取 + Claude AI)。UI 调整待集中处理。
 
 ## 7. 待办 / 待确认
 
@@ -100,6 +106,7 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 2 | 完成后端:Prisma schema(5 模型)+ seed + 认证(JWT cookie/middleware)+ 11 个 API 路由 + 匹配工具 + 注册/登录接 API,`next build` 通过,push
 - 2026-06-14 | Phase 1 | 完成高保真原型:7 页(Dashboard/Jobs/岗位详情含JD改简历/看板/简历/Profile/登录)+ mock 数据,`next build` 通过,push
 - 2026-06-14 | Phase 1 | 搭好 Next.js 14 + TS + Tailwind 骨架(配置/布局/侧边导航/类型/mock 数据)
 - 2026-06-14 | Phase 1 | 技术决策定稿:Next.js + Postgres + Claude API + 美国岗位 + ATS(Greenhouse/Lever/Ashby)数据源

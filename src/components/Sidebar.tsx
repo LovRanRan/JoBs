@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: "📊" },
@@ -13,6 +13,7 @@ const nav = [
 
 export default function Sidebar() {
   const path = usePathname();
+  const router = useRouter();
   return (
     <aside className="w-56 shrink-0 border-r border-gray-200 bg-white min-h-screen p-4 flex flex-col">
       <div className="px-2 mb-6">
@@ -39,9 +40,16 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="mt-auto pt-4 border-t border-gray-100">
-        <Link href="/login" className="text-xs text-gray-400 hover:text-gray-600">
+        <button
+          onClick={async () => {
+            await fetch("/api/auth/logout", { method: "POST" });
+            router.push("/login");
+            router.refresh();
+          }}
+          className="text-xs text-gray-400 hover:text-gray-600"
+        >
           Sign out
-        </Link>
+        </button>
       </div>
     </aside>
   );
