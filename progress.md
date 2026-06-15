@@ -5,6 +5,9 @@
 
 最后更新:2026-06-14
 
+**仓库**:https://github.com/LovRanRan/JoBs (public) · 主分支 `main`
+**Git 工作流**:每完成一个 commit 自动 push 到 GitHub。
+
 ---
 
 ## 1. 项目目标
@@ -94,6 +97,7 @@
 
 > 规则:每完成一步就在最上方追加一条,格式 `YYYY-MM-DD | 阶段 | 做了什么`。
 
+- 2026-06-14 | Phase 0 | 建 GitHub public 仓库 LovRanRan/JoBs,推送代码,默认分支设为 main,确立"每 commit 自动 push"工作流
 - 2026-06-14 | Phase 0 | 在 progress.md 增加「进度日志」板块,确立每步记录规则
 - 2026-06-14 | Phase 0 | 初始化 git repo + .gitignore,首次提交 (8ce3a9c)
 - 2026-06-14 | Phase 0 | 编写 progress.md(目标/决策/技术选型/模块清单/分阶段计划)
